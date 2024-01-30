@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Music Venue Parser</title>
+</head>
+<body>
+  <h1>Music Venue Information Parser</h1>
+
+  <form id="uploadForm">
+    <label for="file">Upload HTML file</label><br>
+    <input id="fileUpload" name="fileUpload" type="file" /><br>
+    <label for="tableClass">Country:</label>
+    <input id="country" name="country" type="text" placeholder="Enter country" value="New Zealand"><br>
+    <label for="tableClass">Table class:</label>
+    <input id="tableClass" name="tableClass" type="text" placeholder="Enter table class" value="table-charts"><br>
+    <button type="submit">Parse</button>
+  </form>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const fileInput = document.getElementById('fileUpload');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please select a file.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const fileContent = event.target.result;
+        parseHTMLFile(fileContent);
+      };
+      reader.readAsText(file);
+    });
+
+    console.log(htmlContent)
+
+    function parseHTMLFile(htmlContent) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, 'text/html');
+      const tableClass = document.getElementById('tableClass').value.trim();
+      const table = doc.querySelectorAll('table.' + tableClass);
+
+      if (!table || table.length === 0) {
+        displayResult('No tables found with class \"${tableClass}\" in the HTML file submitted.');
+        return;
+      }
+
+      const results = Array.from(table).map(table => {
+        return Array.from(table.querySelectorAll('tr')).map(row => {
+          return Array.from(row.querySelectorAll('td')).map(cell => {
+              // Exclude the content of <button> elements with class 'btn-follow' within the cell
+              const buttonElements = cell.querySelectorAll('button.btn-follow');
+              buttonElements.forEach(button => {
+                button.remove();
+              });
+
+              const articleElement = cell.querySelector('article');
+              if (articleElement) {
+                const firstATag = articleElement.querySelector('a');
+                if (firstATag) {
+                  // Extract the href attribute value from the first <a> tag
+                  const hrefAttributeValue = firstATag.getAttribute('href');
+                  // Extract the text content of <a> tags within the <article> element and separate them by a semi-colon
+                  const aTags = Array.from(articleElement.querySelectorAll('a'));
+                  const aTextContents = aTags.map(aTag => aTag.textContent.trim()).join(';');
+                  // Combine the href attribute value with the text content of the <a> tags
+                  const combinedText = `${hrefAttributeValue};${aTextContents}`;
+                  return combinedText;
+                } else {
+                  // If no <a> tag is found within the <article> element, return the text content of the cell
+                  return cell.textContent.trim();
+                }
+
+                // Extract the text content of <a> tags within the <article> element and separate them by a semi-colon
+                // const aTags = Array.from(articleElement.querySelectorAll('a'));
+                // const aTextContents = aTags.map(aTag => aTag.textContent.trim()).join(';');
+                // return aTextContents;
+              } else {
+                // If no <article> element is found, return the text content of the cell
+                return cell.textContent.trim();
+              }
+
+              // Get the text content of the cell after removing <figure> elements
+              return cell.textContent.trim();
+          }).join(';');
+        }).join('\n');
+      }).join('\n\n');
+
+      // Displaying formatted results
+      displayResult(results);
+    }
+
+    function displayResult(result) {
+      const resultElement = document.getElementById('result');
+      resultElement.textContent = result;
+    }
+  </script>
+
+  <h2>Parsed Results</h2>
+  <pre id="result"></pre>
+</body>
+</html>
