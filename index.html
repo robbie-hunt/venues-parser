@@ -36,7 +36,7 @@
       reader.readAsText(file);
     });
 
-    console.log(htmlContent)
+    //console.log(htmlContent)
 
     function parseHTMLFile(htmlContent) {
       const parser = new DOMParser();
@@ -51,44 +51,29 @@
 
       const results = Array.from(table).map(table => {
         return Array.from(table.querySelectorAll('tr')).map(row => {
-          return Array.from(row.querySelectorAll('td')).map(cell => {
-              // Exclude the content of <button> elements with class 'btn-follow' within the cell
-              const buttonElements = cell.querySelectorAll('button.btn-follow');
-              buttonElements.forEach(button => {
-                button.remove();
-              });
+          return Array.from(row.querySelectorAll('td div.entity')).map(cell => {
+            const buttonElements = cell.querySelectorAll('button.btn-follow');
+            buttonElements.forEach(button => {
+              button.remove();
+            });
 
-              const articleElement = cell.querySelector('article');
-              if (articleElement) {
-                const firstATag = articleElement.querySelector('a');
-                if (firstATag) {
-                  // Extract the href attribute value from the first <a> tag
-                  const hrefAttributeValue = firstATag.getAttribute('href');
-                  // Extract the text content of <a> tags within the <article> element and separate them by a semi-colon
-                  const aTags = Array.from(articleElement.querySelectorAll('a'));
-                  const aTextContents = aTags.map(aTag => aTag.textContent.trim()).join(';');
-                  // Combine the href attribute value with the text content of the <a> tags
-                  const combinedText = `${hrefAttributeValue};${aTextContents}`;
-                  return combinedText;
-                } else {
-                  // If no <a> tag is found within the <article> element, return the text content of the cell
-                  return cell.textContent.trim();
-                }
+            const articleElement = cell.querySelector('article');
+            let venueName = "";
+            let venueLocation = "";
 
-                // Extract the text content of <a> tags within the <article> element and separate them by a semi-colon
-                // const aTags = Array.from(articleElement.querySelectorAll('a'));
-                // const aTextContents = aTags.map(aTag => aTag.textContent.trim()).join(';');
-                // return aTextContents;
-              } else {
-                // If no <article> element is found, return the text content of the cell
-                return cell.textContent.trim();
-              }
+            if (articleElement) {
+              venueName = articleElement.querySelector('a h3').textContent.trim();
+              venueLocation = articleElement.querySelector('a.location').textContent.trim();
+            }
 
-              // Get the text content of the cell after removing <figure> elements
-              return cell.textContent.trim();
+            console.log("venueName: " + venueName);
+            console.log("venueLocation: " + venueLocation);
+
+            // return ''; // Assuming you're returning an empty string here, modify as needed
           }).join(';');
         }).join('\n');
-      }).join('\n\n');
+      });
+
 
       // Displaying formatted results
       displayResult(results);
