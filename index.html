@@ -91,7 +91,7 @@
             if (articleElement) {
               venueName = articleElement.querySelector('a h3').textContent.trim();
               venueLocation = articleElement.querySelector('a.location').textContent.trim().replace(`, ${inputCountry}`,"");
-              venueAnalytics = articleElement.querySelector('a:first-child').getAttribute('href');;
+              venueAnalytics = articleElement.querySelector('a:first-child').getAttribute('href');
             }
             break;
           case 1: // Second child <td>
@@ -110,6 +110,8 @@
             break;
         }
       });
+
+      venueAnalytics = `https://app.viberate.com${venueAnalytics}`
 
       // Concatenate variables into a string for the current row
       const rowData = `${venueName};${venueType};${venueCapacity};${venueLocation};${venueGenre};;;${venueAnalytics}\n`;
