@@ -20,6 +20,10 @@
     <button type="submit">Parse</button>
   </form>
 
+  <h2>Parsed Results</h2>
+  <button id="copyButton" onclick="copyResult()">Copy tooo0o clipboard</button>
+  <pre><code id="result"></code></pre>
+
   <script>
     document.getElementById('uploadForm').addEventListener('submit', function(event) {
       event.preventDefault();
@@ -135,19 +139,19 @@
       displayResult(results);
     
       // Check if the button already exists before creating and appending a new one
-      if (!document.getElementById('copyButton')) {
-        // Add a button to copy results to clipboard
-        const copyButton = document.createElement('button');
-        copyButton.id = 'copyButton';
-        copyButton.textContent = 'Copy to Clipboard';
-        copyButton.addEventListener('click', function() {
-          copyToClipboard(results);
-        });
+      // if (!document.getElementById('copyButton')) {
+      //   // Add a button to copy results to clipboard
+      //   //const copyButton = document.createElement('button');
+      //   //copyButton.id = 'copyButton';
+      //   //copyButton.textContent = 'Copy to Clipboard';
+      //   copyButton.addEventListener('click', function() {
+      //     copyToClipboard(results);
+      //   });
         
-        // Insert the copy button before the result element
-        const resultElement = document.getElementById('result');
-        resultElement.parentNode.insertBefore(copyButton, resultElement);
-      }
+      //   // Insert the copy button before the result element
+      //   const resultElement = document.getElementById('result');
+      //   resultElement.parentNode.insertBefore(copyButton, resultElement);
+      // }
     }
     
     function displayResult(result) {
@@ -155,17 +159,36 @@
       resultElement.textContent = result;
     }
     
-    function copyToClipboard(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    }
-  </script>
+    function copyResult() {
+      // Get the text field
+      var copyText = document.getElementById('result');
 
-  <h2>Parsed Results</h2>
-  <pre id="result"></pre>
+      // Select the text field
+      //copyText.select();
+      //copyText.setSelectionRange(0, 99999); // For mobile devices
+
+      // Copy the text inside the text field
+      //navigator.clipboard.writeText(copyText.value);
+      navigator.clipboard.writeText("hellow");
+
+      // Alert the copied text
+      console.log("copied")
+      alert("Copied the text: " + copyText.value);
+    }
+
+    // function copyToClipboard(text) {
+    //   const textarea = document.createElement('textarea');
+    //   textarea.value = text;
+    //   document.body.appendChild(textarea);
+    //   textarea.select();
+    //   document.execCommand('copy');
+    //   document.body.removeChild(textarea);
+    // }
+
+    // document.getElementById('copyButton').addEventListener('click', function() {
+    //   console.log("click")
+    //   copyToClipboard(results);
+    // });
+  </script>
 </body>
 </html>
