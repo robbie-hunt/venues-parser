@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Viberate Table Parser</title>
+</head>
+<body>
+  <h1>Viberate Table Parser</h1>
+
+  <form id="uploadForm">
+    <input type="radio" name="type" id="venuesRadioButton" value="venues">Venues
+    <input type="radio" name="type" id="festivalsRadioButton" value="festivals">Festivals<br>
+
+    <label for="file">Upload HTML file</label><br>
+    <input id="fileUpload" name="fileUpload" type="file" /><br>
+    <label for="file">Or paste HTML table below</label><br>
+    <textarea id="manualTable" rows="10" cols="50" placeholder="Paste HTML table here"></textarea><br><br>
+    
+    <label for="tableClass">Country:</label>
+    <input id="country" name="country" type="text" placeholder="Enter country"><br>
+    <label for="tableClass">Table class:</label>
+    <input id="tableClass" name="tableClass" type="text" placeholder="Enter table class" value="table-charts"><br><br>
+    
+    <button type="submit">Save & submit</button>
+  </form>
+
+  <h2>Parsed Results</h2>
+  <button id="copyToClipboard" onclick="copyToClipboard()">Copy to clipboard</button>
+  <pre><code id="result"></code></pre>
+
+  <script>
+    // Load last selected type from localStorage
+    const typeLastSelected = localStorage.getItem("typeLastSelected");
+    if (typeLastSelected) {
+      document.getElementById(`${typeLastSelected}`).checked = true;
+    }
+    // Save last selected type to localStorage
+    const selectedTypeButtons = document.querySelectorAll("input[name='type']");
+    selectedTypeButtons.forEach(type => {
+      type.onclick = () => {
+        if (type.checked) {
+          localStorage.setItem("typeLastSelected",type.id);
+        }
+      }
+    })
+
+    // Set default value of country to last saved valye
+    const countryLastInputted = localStorage.getItem("countryLastInputted");
+    if (countryLastInputted) {
+      document.getElementById('country').setAttribute('value',countryLastInputted)
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+    
+      const fileInput = document.getElementById('fileUpload');
+      const file = fileInput.files[0];
+    
+      // Get the value of the manualTable textarea
+      const manualTable = document.getElementById('manualTable').value.trim();
+    
+      // Check if the manualTable textarea has content
+      if (manualTable) {
+        festivalParser(manualTable); // Parse directly from the textarea content
+        return; // Exit the function to prevent further processing
+      }
+    
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const fileContent = event.target.result;
+        festivalParser(fileContent); // Parse the file content
+      };
+    
+      if (!file) {
+        alert('Please either paste in a table or upload a file.');
+        return;
+      }
+      reader.readAsText(file); // Read the uploaded file
+    });
+
+    function festivalParser(htmlContent) {
+      const festivalParser = new DOMParser();
+      const doc = festivalParser.parseFromString(htmlContent, 'text/html');
+      const tableClass = document.getElementById('tableClass').value.trim();
+      const table = doc.querySelectorAll('table.' + tableClass);
+    
+      if (!table || table.length === 0) {
+        displayResult(`No tables found with class \"${tableClass}\" in the HTML file submitted.`);
+        return;
+      }
+    
+      const manualTable = document.getElementById('manualTable').value.trim();
+    
+      const tableCleaned = document.createElement('table');
+      if (manualTable) {
+        tableCleaned.innerHTML = manualTable;
+      } else {
+        tableCleaned.innerHTML = Array.from(table)[1].innerHTML;
+      }
+    
+      const rows = tableCleaned.querySelectorAll('tr');
+    
+      let results = "";
+      const inputCountry = document.getElementById('country').value.trim();
+      if (inputCountry) {
+        window.localStorage.setItem("countryLastInputted",inputCountry);
+      } else {
+        window.localStorage.removeItem("countryLastInputted");
+      }
+
+      const selectedType = document.querySelector("input[name=type]:checked").getAttribute('id')
+    
+      rows.forEach(row => {
+        const tdElements = row.querySelectorAll('td');
+        let rowData = "";
+        var entityName = "";
+        var entityLocation = "";
+        var entitySize = "";
+        var entityGenre = "";
+        var entityAnalytics = "";
+    
+        tdElements.forEach((td, index) => {
+          if (selectedType === 'venuesRadioButton') {
+            switch (index) {
+              case 0: // First child <td>
+                const articleElement = td.querySelector('article');
+                if (articleElement) {
+                  entityName = articleElement.querySelector('a h3').textContent.trim();
+                  entityLocation = articleElement.querySelector('a.location').textContent.trim().replace(`, ${inputCountry}`,"");
+                  if (inputCountry) {
+                    entityLocation = articleElement.querySelector('a.location').textContent.trim().replace(`, ${inputCountry}`,"");
+                  } else {
+                    entityLocation = articleElement.querySelector('a.location').textContent.trim();
+                  }
+                  entityAnalytics = articleElement.querySelector('a:first-child').getAttribute('href');
+                }
+                break;
+              case 1: // Second child <td>
+                // Nothing for country td
+                break;
+              case 2: // Third child <td>
+                entityGenre = td.querySelector('.genres').textContent.trim();
+                break;
+              case 3: // Fourth child <td>
+                entityType = td.querySelector('.value').textContent.trim();
+                break;
+              case 4: // Fifth child <td>
+                entityCapacity = td.querySelector('.value').textContent.trim();
+                break;
+              default:
+                break;
+            }
+          } else if (selectedType === 'festivalsRadioButton') {
+            switch (index) {
+              case 0: // First child <td>
+                // Nothing for rank number td
+                break;
+              case 1: // Second child <td>
+                const articleElement = td.querySelector('article');
+                if (articleElement) {
+                  entityName = articleElement.querySelector('a h3').textContent.trim();
+                  entityLocation = articleElement.querySelector('a.location').textContent.trim().replace(`, ${inputCountry}`,"");
+                  if (inputCountry) {
+                    entityLocation = articleElement.querySelector('a.location').textContent.trim().replace(`, ${inputCountry}`,"");
+                  } else {
+                    entityLocation = articleElement.querySelector('a.location').textContent.trim();
+                  }
+                  entityAnalytics = articleElement.querySelector('a:first-child').getAttribute('href');
+                }
+                break;
+              case 2: // Third child <td>
+                // Nothing for country td
+                break;
+              case 3: // Fourth child <td>
+                entityGenre = td.querySelector('.genres').textContent.trim();
+                break;
+              case 4: // Fifth child <td>
+                entitySize = td.querySelector('.value').textContent.trim();
+                break;
+              case 5: // Sixth child <td>
+                // Nothing for performance rank
+                break;
+              case 6: // Seventh child <td>
+                // Nothing for lineup rank
+                break;
+              case 7: // Eighth child <td>
+                // Nothing for network rank
+                break;
+              default:
+                break;
+            }
+          }
+        });
+        
+    
+        entityAnalytics = `https://app.viberate.com${entityAnalytics}`
+    
+        // Concatenate variables into a string for the current row
+        if (selectedType === 'venuesRadioButton') {
+          rowData = `${entityName};${entityType};${entityCapacity};${entityLocation};${entityGenre};;;${entityAnalytics}\n`;
+        } else if (selectedType === 'festivalsRadioButton') {
+          rowData = `${entityName};;${entityLocation};${entitySize};${entityGenre};;;${entityAnalytics}\n`;
+        }
+        results += rowData;
+      });
+    
+      // Displaying formatted results
+      displayResult(results);
+    }
+
+    function displayResult(result) {
+      const resultElement = document.getElementById('result');
+      resultElement.textContent = result;
+    }
+
+    function copyToClipboard() {
+      var textArea = document.createElement("textarea");
+      textArea.value = document.getElementById('result').textContent.trim();
+      
+      // Avoid scrolling to bottom
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        var successful = document.execCommand('copy');
+        var msg = successful ? 'successful' : 'unsuccessful';
+      } catch (err) {
+        console.error('Copy to clipboard: unable to copy', err);
+      }
+
+      document.body.removeChild(textArea);
+    }
+  </script>
+</body>
+</html>
