@@ -7,82 +7,105 @@
   <h1>Music Venue Information Parser</h1>
 
   <form id="uploadForm">
-    <label for="file">Upload HTML file</label><br>
-    <input id="fileUpload" name="fileUpload" type="file" /><br>
-    <label for="tableClass">Country:</label>
-    <input id="country" name="country" type="text" placeholder="Enter country" value="New Zealand"><br>
-    <label for="tableClass">Table class:</label>
-    <input id="tableClass" name="tableClass" type="text" placeholder="Enter table class" value="table-charts"><br>
-    <button type="submit">Parse</button>
+  <label for="file">Upload HTML file</label><br>
+  <input id="fileUpload" name="fileUpload" type="file" /><br>
+  <label for="tableClass">Country:</label>
+  <input id="country" name="country" type="text" placeholder="Enter country" value="New Zealand"><br>
+  <label for="tableClass">Table class:</label>
+  <input id="tableClass" name="tableClass" type="text" placeholder="Enter table class" value="table-charts"><br>
+  <button type="submit">Parse</button>
   </form>
 
   <script>
-    document.getElementById('uploadForm').addEventListener('submit', function(event) {
-      event.preventDefault();
+  document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    event.preventDefault();
 
-      const fileInput = document.getElementById('fileUpload');
-      const file = fileInput.files[0];
+    const fileInput = document.getElementById('fileUpload');
+    const file = fileInput.files[0];
 
-      if (!file) {
-        alert('Please select a file.');
-        return;
-      }
+    if (!file) {
+    alert('Please select a file.');
+    return;
+    }
 
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const fileContent = event.target.result;
-        parseHTMLFile(fileContent);
-      };
-      reader.readAsText(file);
-    });
+    const reader = new FileReader();
+    reader.onload = function(event) {
+    const fileContent = event.target.result;
+    parseHTMLFile(fileContent);
+    };
+    reader.readAsText(file);
+  });
 
-    //console.log(htmlContent)
+  function parseHTMLFile(htmlContent) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const tableClass = document.getElementById('tableClass').value.trim();
+    const table = doc.querySelectorAll('table.' + tableClass);
 
-    function parseHTMLFile(htmlContent) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-      const tableClass = document.getElementById('tableClass').value.trim();
-      const table = doc.querySelectorAll('table.' + tableClass);
+    if (!table || table.length === 0) {
+      displayResult('No tables found with class \"${tableClass}\" in the HTML file submitted.');
+      return;
+    }
 
-      if (!table || table.length === 0) {
-        displayResult('No tables found with class \"${tableClass}\" in the HTML file submitted.');
-        return;
-      }
+    const tableCleaned = document.createElement('table');
+    tableCleaned.innerHTML = Array.from(table)[1].innerHTML;
 
-      const results = Array.from(table).map(table => {
-        return Array.from(table.querySelectorAll('tr')).map(row => {
-          return Array.from(row.querySelectorAll('td div.entity')).map(cell => {
-            const buttonElements = cell.querySelectorAll('button.btn-follow');
-            buttonElements.forEach(button => {
-              button.remove();
-            });
+    const rows = tableCleaned.querySelectorAll('tr');
 
-            const articleElement = cell.querySelector('article');
-            let venueName = "";
-            let venueLocation = "";
+    let results = "";
+    let inputCountry = document.getElementById('country').value.trim();
 
+    rows.forEach(row => {
+      console.log("row: " + row)
+      const tdElements = row.querySelectorAll('td');
+      let venueName = "";
+      let venueLocation = "";
+      let venueType = "";
+      let venueCapacity = "";
+      let venueGenre = "";
+      let venueAnalytics = "";
+
+      tdElements.forEach((td, index) => {
+        console.log("2")
+        switch (index) {
+          case 0: // First child <td>
+            const articleElement = td.querySelector('article');
             if (articleElement) {
               venueName = articleElement.querySelector('a h3').textContent.trim();
-              venueLocation = articleElement.querySelector('a.location').textContent.trim();
+              venueLocation = articleElement.querySelector('a.location').textContent.trim().replace(`, ${inputCountry}`,"");
+              venueAnalytics = articleElement.querySelector('a:first-child').getAttribute('href');;
             }
-
-            console.log("venueName: " + venueName);
-            console.log("venueLocation: " + venueLocation);
-
-            // return ''; // Assuming you're returning an empty string here, modify as needed
-          }).join(';');
-        }).join('\n');
+            break;
+          case 1: // Second child <td>
+            // Nothing for country td
+            break;
+          case 2: // Third child <td>
+            venueGenre = td.querySelector('.genres').textContent.trim();
+            break;
+          case 3: // Fourth child <td>
+            venueType = td.querySelector('.value').textContent.trim();
+            break;
+          case 4: // Fifth child <td>
+            venueCapacity = td.querySelector('.value').textContent.trim();
+            break;
+          default:
+            break;
+        }
       });
 
+      // Concatenate variables into a string for the current row
+      const rowData = `${venueName};${venueType};${venueCapacity};${venueLocation};${venueGenre};;;${venueAnalytics}\n`;
+      results += rowData;
+    });
 
-      // Displaying formatted results
-      displayResult(results);
-    }
+    // Displaying formatted results
+    displayResult(results);
+  }
 
-    function displayResult(result) {
-      const resultElement = document.getElementById('result');
-      resultElement.textContent = result;
-    }
+  function displayResult(result) {
+    const resultElement = document.getElementById('result');
+    resultElement.textContent = result;
+  }
   </script>
 
   <h2>Parsed Results</h2>
