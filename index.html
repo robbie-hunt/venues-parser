@@ -10,7 +10,7 @@
     <label for="file">Upload HTML file</label><br>
     <input id="fileUpload" name="fileUpload" type="file" /><br>
     <label for="file">Or paste HTML table below</label><br>
-    <textarea id="tableHTML" rows="10" cols="50" placeholder="Paste HTML table here"></textarea><br><br>
+    <textarea id="manualTable" rows="10" cols="50" placeholder="Paste HTML table here"></textarea><br><br>
     
     <label for="tableClass">Country:</label>
     <input id="country" name="country" type="text" placeholder="Enter country" value="New Zealand"><br>
@@ -27,18 +27,28 @@
     const fileInput = document.getElementById('fileUpload');
     const file = fileInput.files[0];
 
-    if (!file) {
-    alert('Please select a file.');
-    return;
+    // Get the value of the manualTable textarea
+    const manualTable = document.getElementById('manualTable').value.trim();
+
+    // Check if the manualTable textarea has content
+    if (manualTable) {
+        parseHTMLFile(manualTable); // Parse directly from the textarea content
+        return; // Exit the function to prevent further processing
     }
 
     const reader = new FileReader();
     reader.onload = function(event) {
-    const fileContent = event.target.result;
-    parseHTMLFile(fileContent);
+        const fileContent = event.target.result;
+        parseHTMLFile(fileContent); // Parse the file content
     };
-    reader.readAsText(file);
-  });
+
+    if (!file) {
+        alert('Please either paste in a table or upload a file.');
+        return;
+    }
+    reader.readAsText(file); // Read the uploaded file
+});
+
 
   function parseHTMLFile(htmlContent) {
     const parser = new DOMParser();
@@ -47,12 +57,18 @@
     const table = doc.querySelectorAll('table.' + tableClass);
 
     if (!table || table.length === 0) {
-      displayResult('No tables found with class \"${tableClass}\" in the HTML file submitted.');
+      displayResult(`No tables found with class \"${tableClass}\" in the HTML file submitted.`);
       return;
     }
 
+    const manualTable = document.getElementById('manualTable').value.trim();
+
     const tableCleaned = document.createElement('table');
-    tableCleaned.innerHTML = Array.from(table)[1].innerHTML;
+    if (manualTable) {
+      tableCleaned.innerHTML = manualTable;
+    } else {
+      tableCleaned.innerHTML = Array.from(table)[1].innerHTML;
+    }
 
     const rows = tableCleaned.querySelectorAll('tr');
 
@@ -60,7 +76,6 @@
     let inputCountry = document.getElementById('country').value.trim();
 
     rows.forEach(row => {
-      console.log("row: " + row)
       const tdElements = row.querySelectorAll('td');
       let venueName = "";
       let venueLocation = "";
@@ -70,7 +85,6 @@
       let venueAnalytics = "";
 
       tdElements.forEach((td, index) => {
-        console.log("2")
         switch (index) {
           case 0: // First child <td>
             const articleElement = td.querySelector('article');
