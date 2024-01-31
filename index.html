@@ -7,13 +7,17 @@
   <h1>Music Venue Information Parser</h1>
 
   <form id="uploadForm">
-  <label for="file">Upload HTML file</label><br>
-  <input id="fileUpload" name="fileUpload" type="file" /><br>
-  <label for="tableClass">Country:</label>
-  <input id="country" name="country" type="text" placeholder="Enter country" value="New Zealand"><br>
-  <label for="tableClass">Table class:</label>
-  <input id="tableClass" name="tableClass" type="text" placeholder="Enter table class" value="table-charts"><br>
-  <button type="submit">Parse</button>
+    <label for="file">Upload HTML file</label><br>
+    <input id="fileUpload" name="fileUpload" type="file" /><br>
+    <label for="file">Or paste HTML table below</label><br>
+    <textarea id="tableHTML" rows="10" cols="50" placeholder="Paste HTML table here"></textarea><br><br>
+    
+    <label for="tableClass">Country:</label>
+    <input id="country" name="country" type="text" placeholder="Enter country" value="New Zealand"><br>
+    <label for="tableClass">Table class:</label>
+    <input id="tableClass" name="tableClass" type="text" placeholder="Enter table class" value="table-charts"><br><br>
+    
+    <button type="submit">Parse</button>
   </form>
 
   <script>
